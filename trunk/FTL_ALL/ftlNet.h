@@ -1340,8 +1340,9 @@ namespace FTL
 		TCHAR m_szHostName[INTERNET_MAX_HOST_NAME_LENGTH];
 		TCHAR m_szUserName[INTERNET_MAX_USER_NAME_LENGTH];
 		TCHAR m_szPassword[INTERNET_MAX_PASSWORD_LENGTH];
-		TCHAR m_szUrlPath[INTERNET_MAX_URL_LENGTH];
 		TCHAR m_szExtraInfo[INTERNET_MAX_PATH_LENGTH];
+	private:
+		TCHAR m_szUrlPath[INTERNET_MAX_URL_LENGTH + 1];
 	};
 
 	//////////////////////////////////////////////////////////////////////////

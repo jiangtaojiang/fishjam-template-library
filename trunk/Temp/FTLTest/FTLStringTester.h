@@ -11,11 +11,14 @@ public:
 
     CPPUNIT_TEST_SUITE( CFTLStringTester );
     CPPUNIT_TEST( test_IsMachMask );
+	CPPUNIT_TEST( test_DeleteRepeatCharacter );
     CPPUNIT_TEST( test_UpperLower );
     CPPUNIT_TEST( test_UnicodeHardCodeString );
     CPPUNIT_TEST_SUITE_END();
 
     void test_IsMachMask();
+	void test_DeleteRepeatCharacter();
+
     void test_UpperLower();
     void test_UnicodeHardCodeString();
 
