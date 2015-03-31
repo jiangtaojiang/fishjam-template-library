@@ -5,7 +5,11 @@
 * 人眼视觉对RGB三基色的灵敏度各不相同，在量化过程中可以根据不同颜色对象使用不同特性的压扩变换方法，以取得最佳量化效果。
 * 三种颜色对亮度影响系数为 R:G:B=0.299:0.597:0.114, 通常用相对影响系数 2:1:4
 *
+* CodeProject 上C#的图像颜色量化算法(IFColorQuantizer 即以此为模型生成) -- SimplePaletteQuantizer
+*   http://www.codeproject.com/Articles/66341/A-Simple-Yet-Quite-Powerful-Palette-Quantizer-in-C
+*
 * 颜色量化算法(如 24位真彩转256色 ) -- https://github.com/jsummers/imageworsener/issues/2
+*   
 *   聚类算法(Clustering Algorithm) -- 
 *     原理:选择若干颜色作为聚类中心，按照距离准则使每种颜色向各个中心聚集，从而得到分类。
 *     优点:对一般的颜色图像进行量化处理均能得到较好的量化效果

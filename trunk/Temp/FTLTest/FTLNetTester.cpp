@@ -90,6 +90,46 @@ void CFTLNetTester::test_IpV6()
 #endif 
 }
 
+void CFTLNetTester::test_UrlCanonical()
+{
+	BOOL bRet = FALSE;
+	typedef std::pair<CString, CString> UrlCanonicalCheckValueType;
+	UrlCanonicalCheckValueType checkValues[] = {
+		std::make_pair(_T("http://www.baidu.com/"), _T("http://www.baidu.com")),
+		std::make_pair(_T("http://www.baidu.com////"), _T("http://www.baidu.com")),
+		std::make_pair(_T("http:///www.baidu.com:8080///"), _T("http://www.baidu.com")),
+		std::make_pair(_T("http:////www.baidu.com:8080//help//somefolder//help.html"), _T("http://www.baidu.com")),
+	};
+
+	DWORD dwCheckFlags[] = {
+		ICU_NO_ENCODE,				// Don't convert unsafe characters to escape sequence
+		ICU_DECODE,					// Convert %XX escape sequences to characters
+		ICU_NO_META,				// Don't convert .. etc. meta path sequences
+		ICU_ENCODE_SPACES_ONLY,		// Encode spaces only
+		ICU_BROWSER_MODE,			// Special encode/decode rules for browser
+		ICU_ENCODE_PERCENT			// Encode any percent (ASCII25)
+	};
+	FTLTRACE(TEXT("Begin test_UrlCanonical\n"));
+
+	//是不是需要什么特殊的设置，或者说该函数不是做这个功能的?
+#pragma TODO(InternetCanonicalizeUrl 不能标准化URL)
+
+	TCHAR szCanonicalResult[INTERNET_MAX_URL_LENGTH] = {0};
+	for (int i = 0; i < _countof(checkValues); i++)
+	{
+		ZeroMemory(szCanonicalResult, sizeof(szCanonicalResult));
+		FTLTRACE(TEXT("  Url=%s\n"), checkValues[i].first);
+
+		//DWORD dwFlags = 0;
+		for (int j = 0; j < _countof(dwCheckFlags); j++)
+		{
+			DWORD dwResultSize = _countof(szCanonicalResult);
+			API_VERIFY(InternetCanonicalizeUrl(checkValues[i].first, szCanonicalResult, &dwResultSize, dwCheckFlags[j] ));
+			FTLTRACE(TEXT("    Flags(0x%x), Lenght=%d, Result=%s\n"), dwCheckFlags[j], dwResultSize, szCanonicalResult);			
+		}
+	}
+}
+
 void CFTLNetTester::test_UrlEscape()
 {
 	HRESULT hr = E_FAIL;
@@ -124,6 +164,86 @@ void CFTLNetTester::test_UrlEscape()
 	//中文
 }
 
+const TCHAR PREFIX_HTTP[]			= _T("http://");
+const TCHAR PREFIX_RESOURCE[]		= _T("res://");
+void _CreateUrl(const TCHAR* pszUrl, TCHAR* pszBuffer, int cchBuffer)
+{
+	DWORD cchLength = cchBuffer;
+	TCHAR szHostName[INTERNET_MAX_HOST_NAME_LENGTH + 1] = { 0 };
+	TCHAR szUrlPath[INTERNET_MAX_PATH_LENGTH + 1] = { 0 };
+
+	URL_COMPONENTS uc;
+	::ZeroMemory(&uc, sizeof(uc));
+	uc.dwStructSize = sizeof(URL_COMPONENTS);
+	uc.lpszHostName = szHostName;
+	uc.dwHostNameLength = INTERNET_MAX_HOST_NAME_LENGTH;
+	uc.lpszUrlPath = szUrlPath;
+	uc.dwUrlPathLength = INTERNET_MAX_PATH_LENGTH;
+
+	if ( !::InternetCrackUrl(pszUrl, lstrlen(pszUrl), 0, &uc) )
+	{
+		uc.nScheme = INTERNET_SCHEME_HTTP ;
+		::lstrcpyn(szHostName, pszUrl, _countof(szHostName));
+		uc.dwUrlPathLength = 0;
+	}
+
+	if ( INTERNET_SCHEME_UNKNOWN == uc.nScheme )
+	{
+		if ( ::StrCmpNI(pszUrl, PREFIX_HTTP, ::lstrlen(PREFIX_HTTP)) != 0 )
+		{
+			TCHAR* pTemp = const_cast<TCHAR *>(pszUrl);
+			while( *pTemp == _T('/') )
+			{
+				++pTemp;
+			}
+
+			StringCchCopy(pszBuffer, cchBuffer, PREFIX_HTTP);
+			StringCchCat(pszBuffer, cchBuffer, pTemp);
+			return;
+		}
+	}
+	else if ( uc.nScheme == INTERNET_SCHEME_JAVASCRIPT
+		|| uc.nScheme == INTERNET_SCHEME_VBSCRIPT )
+	{
+		lstrcpyn(pszBuffer, pszUrl, cchBuffer);
+		return;
+	}
+
+	//::PathAddSlash(szHostName, COUNTOF(szHostName)) ;
+
+	cchLength = cchBuffer;
+	if ( !::InternetCreateUrl(&uc, 0, pszBuffer, &cchLength) )
+	{
+		lstrcpyn(pszBuffer, pszUrl, cchBuffer);
+	}
+}
+
+void CFTLNetTester::test_InternetCrackUrl()
+{
+	BOOL bRet = FALSE;
+	LPCTSTR pszCheckURL = _T("http:////www.baidu.com:8080//help//somefolder//help.html");
+	TCHAR szStandardUrl[INTERNET_MAX_URL_LENGTH] = {0};
+
+	FTL::CFUrlComponents urlCompontents;
+	DWORD dwServiceType = 0;
+	WORD nPort = 0;
+	DWORD dwFlags = 0;
+
+	urlCompontents.ParseUrl(pszCheckURL, dwServiceType, nPort, DWFAF_AUTOHIDE);
+
+	//_CreateUrl(pszCheckURL, szStandardUrl, _countof(szStandardUrl));
+	FTLTRACE(TEXT("After Crack = %s\n"), szStandardUrl);
+}
+
+void CFTLNetTester::test_UrlMonFunctions()
+{
+	HRESULT hr = E_FAIL;
+	CHAR szUserAgent[4096] = {0};
+	DWORD dwSize = _countof(szUserAgent) - 1;
+	COM_VERIFY(ObtainUserAgentString(0, szUserAgent, &dwSize));
+	//FTLTRACEA("userAgent=%s\n", szUserAgent);
+}
+
 void CFTLNetTester::test_WinSocket()
 {
     WORD wVersionRequested = MAKEWORD( 2, 2 );
@@ -141,15 +261,6 @@ void CFTLNetTester::test_WinSocket()
             wsaData.lpVendorInfo ?  CA2T(wsaData.lpVendorInfo)  : TEXT("No VendorInfo"));
         WSACleanup();
     }
-}
-
-void CFTLNetTester::test_UrlMonFunctions()
-{
-    HRESULT hr = E_FAIL;
-    CHAR szUserAgent[4096] = {0};
-    DWORD dwSize = _countof(szUserAgent) - 1;
-    COM_VERIFY(ObtainUserAgentString(0, szUserAgent, &dwSize));
-    //FTLTRACEA("userAgent=%s\n", szUserAgent);
 }
 
 void CFTLNetTester::test_DownloadMethods()

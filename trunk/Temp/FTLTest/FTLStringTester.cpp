@@ -13,6 +13,27 @@ void CFTLStringTester::test_IsMachMask()
     CPPUNIT_ASSERT(!FTL::CFStringUtil::IsMatchMask(pszName, TEXT("* String")));
 }
 
+void CFTLStringTester::test_DeleteRepeatCharacter()
+{
+	typedef std::pair<CString, CString> UrlCanonicalCheckValueType;
+	UrlCanonicalCheckValueType checkValues[] = {
+		std::make_pair(_T("http://www.baidu.com/"), _T("http://www.baidu.com")),
+		std::make_pair(_T("http://www.baidu.com////"), _T("http://www.baidu.com")),
+		std::make_pair(_T("http:///www.baidu.com:8080///"), _T("http://www.baidu.com")),
+		std::make_pair(_T("http:////www.baidu.com:8080////help//somefolder//help.html"), _T("http://www.baidu.com")),
+	};
+
+	TCHAR szCanonicalResult[1024] = {0};
+	for (int i = 0; i < _countof(checkValues); i++)
+	{
+		ZeroMemory(szCanonicalResult, sizeof(szCanonicalResult));
+		FTLTRACE(TEXT("  Url=%s\n"), checkValues[i].first);
+		CFStringUtil::DeleteRepeatCharacter(checkValues[i].first, szCanonicalResult, 10, _T('/'), 1);
+		FTLTRACE(TEXT("  Del=%s\n"), szCanonicalResult);
+	}
+}
+
+
 void CFTLStringTester::test_UpperLower()
 {
     //注意：字符串函数操作时，最好使用Unicode版本，否则国际化时可能出现问题

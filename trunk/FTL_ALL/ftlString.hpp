@@ -92,6 +92,44 @@ namespace FTL
         }
         return ((!*pszName && !*pszMask) || (_T('*') == *pszMask));
     }
+
+	int  CFStringUtil::DeleteRepeatCharacter(LPCTSTR pszSrc, LPTSTR pszDest, int nDestSize, TCHAR szChar, int nMaxRepeatCount)
+	{
+		int nRepeartSplashCount = 0;
+		int nDestCount = 0;
+		//LPTSTR pszSrc = pszSrc;
+		//LPTSTR pszDest = pszDest;
+
+		while(pszSrc && *pszSrc && nDestCount < nDestSize - 2 ) //last assign +  NULL
+		{
+			if (szChar != *pszSrc)
+			{
+				*pszDest++ = *pszSrc++;
+				nRepeartSplashCount = 0;
+				nDestCount++;
+			}
+			else
+			{
+				if (nRepeartSplashCount >= nMaxRepeatCount)
+				{
+					pszSrc++;
+				}
+				else
+				{
+					*pszDest++ = *pszSrc++;
+					nDestCount++;
+				}
+				nRepeartSplashCount++;
+			}
+		}
+
+		if (pszSrc)	//Last NULL
+		{
+			*pszDest = *pszSrc;
+		}
+
+		return nDestCount;
+	}
 }
 
 #endif //FTL_STRING_HPP

@@ -23,6 +23,7 @@ namespace FTL
     {
     public:
         FTLINLINE static BOOL IsMatchMask(LPCTSTR Name, LPCTSTR Mask, BOOL bCaseSensitive = TRUE);
+		FTLINLINE static int  DeleteRepeatCharacter(LPCTSTR pszSrc, LPTSTR pszDest, int nDestSize, TCHAR szChar, int nMaxRepeatCount);
     };
 }
 #endif //FTL_STRING_H
