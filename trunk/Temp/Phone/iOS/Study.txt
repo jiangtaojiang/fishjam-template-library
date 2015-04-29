@@ -1,3 +1,0 @@
-http://www.foldr.org/~michaelw/objective-c/
-https://github.com/objc-zen/objc-zen-book
-http://www.cocoachina.com/special/swift/
